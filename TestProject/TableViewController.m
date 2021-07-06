@@ -18,9 +18,6 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    UIRefreshControl *refreshControl = [[UIRefreshControl alloc] init];
-    [refreshControl addTarget:self action:@selector(refresh) forControlEvents:UIControlEventValueChanged];
-    self.refreshControl = refreshControl;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -29,15 +26,17 @@
 }
 
 - (void)refresh {
-    [self fetchCatFacts];
+    if (self.shouldFetchData) { // When doing any API calls the section gets a height for some reason.
+        [self fetchCatFacts];
+    } else {
+        [self populateData:@[@{@"text": @"Test data and stuff"}, @{@"text": @"Test data and stuff"}, @{@"text": @"Test data and stuff"}]];
+        [self.refreshControl endRefreshing];
+        [self.tableView reloadData];
+    }
 }
 
 - (void)fetchCatFacts {
     [[CatFactService sharedInstance] fetchCatFacts:^(id _Nullable responseObject) {
-        for (id item in responseObject) {
-            
-        }
-        NSLog(@"Fetched cat fact");
         [self populateData:responseObject];
         [self.refreshControl endRefreshing];
         [self.tableView reloadData];
@@ -84,60 +83,8 @@
     return 30.0;
 }
 
-- (void)tableView:(UITableView *)tableView willDisplayHeaderView:(UIView *)view forSection:(NSInteger)section {
-    NSString *text = [self.tableView.dataSource tableView:self.tableView titleForHeaderInSection:section];
-    if ([text length] > 0) {
-        UITableViewHeaderFooterView *headerIndexText = (UITableViewHeaderFooterView *)view;
-        [headerIndexText.textLabel setTextColor:[UIColor blackColor]];
-    }
-}
-
 - (NSString*)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
     return [self.headers objectAtIndex:section];
 }
-
-/*
-// Override to support conditional editing of the table view.
-- (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the specified item to be editable.
-    return YES;
-}
-*/
-
-/*
-// Override to support editing the table view.
-- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (editingStyle == UITableViewCellEditingStyleDelete) {
-        // Delete the row from the data source
-        [tableView deleteRowsAtIndexPaths:@[indexPath] withRowAnimation:UITableViewRowAnimationFade];
-    } else if (editingStyle == UITableViewCellEditingStyleInsert) {
-        // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-    }   
-}
-*/
-
-/*
-// Override to support rearranging the table view.
-- (void)tableView:(UITableView *)tableView moveRowAtIndexPath:(NSIndexPath *)fromIndexPath toIndexPath:(NSIndexPath *)toIndexPath {
-}
-*/
-
-/*
-// Override to support conditional rearranging of the table view.
-- (BOOL)tableView:(UITableView *)tableView canMoveRowAtIndexPath:(NSIndexPath *)indexPath {
-    // Return NO if you do not want the item to be re-orderable.
-    return YES;
-}
-*/
-
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
-}
-*/
 
 @end
