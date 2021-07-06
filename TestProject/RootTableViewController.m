@@ -30,12 +30,13 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return 1;
+    return 2;
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     UIStoryboard *mainStoryboard = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     TableViewController *vc = [mainStoryboard instantiateViewControllerWithIdentifier:@"TableViewController"];
+    vc.shouldFetchData = indexPath.row == 0 ? YES : NO;
     [self.navigationController showViewController:vc sender:nil];
 }
 
