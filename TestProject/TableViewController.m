@@ -5,7 +5,6 @@
 //
 
 #import "TableViewController.h"
-#import "CatFactService.h"
 #import "LabelTableViewCell.h"
 
 @interface TableViewController ()
@@ -18,6 +17,10 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    self.title = self.shouldFetchData ? @"Padding issue" : @"No padding issue";
+    if (@available(iOS 15.0, *)) {
+        [self.tableView setSectionHeaderTopPadding:0.0f]; // Not working
+    }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -27,34 +30,43 @@
 
 - (void)refresh {
     if (self.shouldFetchData) { // When doing any API calls the section gets a height for some reason.
-        [self fetchCatFacts];
-    } else {
-        [self populateData:@[@{@"text": @"Test data and stuff"}, @{@"text": @"Test data and stuff"}, @{@"text": @"Test data and stuff"}]];
+        [self fetchJokes];
+    } else { // No network calls here doesn't give the section height
+        [self populateData:@[@{@"setup": @"Test data and stuff", @"punchline": @"and more data"}, @{@"setup": @"Test data and stuff", @"punchline": @"and more data"}, @{@"setup": @"Test data and stuff", @"punchline": @"and more data"}]];
         [self.refreshControl endRefreshing];
         [self.tableView reloadData];
     }
 }
 
-- (void)fetchCatFacts {
-    [[CatFactService sharedInstance] fetchCatFacts:^(id _Nullable responseObject) {
-        [self populateData:responseObject];
-        [self.refreshControl endRefreshing];
-        [self.tableView reloadData];
-    } failure:^(NSError * _Nullable error) {
-
+- (void)fetchJokes {
+    NSString *dataUrl = @"https://official-joke-api.appspot.com/jokes/programming/random";
+    NSURL *url = [NSURL URLWithString:dataUrl];
+    NSURLSessionDataTask *downloadTask = [[NSURLSession sharedSession]
+      dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
+        if (error == nil) {
+            NSString *requestReply = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
+            NSData * responseData = [requestReply dataUsingEncoding:NSUTF8StringEncoding];
+            NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&error];
+            [self populateData:jsonArray];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self.tableView reloadData];
+            });
+        }
     }];
+    [downloadTask resume];
 }
 
 - (void)populateData:(NSArray *)responseObject {
     NSMutableArray *items = [NSMutableArray array];
     NSMutableArray *cellIdentifiers = [NSMutableArray array];
     
-    for (NSDictionary *catFact in responseObject) {
-        [items addObject:catFact[@"text"]];
+    for (NSDictionary *joke in responseObject) {
+        NSString *jokeText = [NSString stringWithFormat:@"%@\n\n%@", joke[@"setup"], joke[@"punchline"]];
+        [items addObject:jokeText];
         [cellIdentifiers addObject:@"LabelTableViewCell"];
     }
     
-    self.headers = @[@"Some cat facts"];
+    self.headers = self.shouldFetchData ? @[@"Some bad jokes"] : @[@"Some mock data"];
     self.items = @[items];
     self.cellIdentifiers = @[cellIdentifiers];
 }
@@ -75,12 +87,13 @@
     LabelTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:identifier];
     
     [cell.mainLabel setText:item];
+    [cell setUserInteractionEnabled:NO];
     
     return cell;
 }
 
 - (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
-    return 30.0;
+    return 30.0f;
 }
 
 - (NSString*)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section {
