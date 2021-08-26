@@ -35,4 +35,8 @@
     [self.navigationController showViewController:vc sender:nil];
 }
 
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {
+    return CGFLOAT_MIN;
+}
+
 @end
