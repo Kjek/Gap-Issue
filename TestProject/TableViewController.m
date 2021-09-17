@@ -32,21 +32,21 @@
     if (self.shouldFetchData) { // When doing any API calls the section gets a height for some reason.
         [self fetchJokes];
     } else { // No network calls here doesn't give the section height
-        [self populateData:@[@{@"setup": @"Test data and stuff", @"punchline": @"and more data"}, @{@"setup": @"Test data and stuff", @"punchline": @"and more data"}, @{@"setup": @"Test data and stuff", @"punchline": @"and more data"}]];
+        [self populateData:@{@"setup": @"Test data and stuff", @"delivery": @"and more data"}];
         [self.refreshControl endRefreshing];
         [self.tableView reloadData];
     }
 }
 
 - (void)fetchJokes {
-    NSString *dataUrl = @"https://official-joke-api.appspot.com/jokes/programming/random";
+    NSString *dataUrl = @"https://v2.jokeapi.dev/joke/Programming?blacklistFlags=nsfw,religious,political,racist,sexist,explicit&type=twopart";
     NSURL *url = [NSURL URLWithString:dataUrl];
     NSURLSessionDataTask *downloadTask = [[NSURLSession sharedSession]
       dataTaskWithURL:url completionHandler:^(NSData *data, NSURLResponse *response, NSError *error) {
         if (error == nil) {
             NSString *requestReply = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
             NSData * responseData = [requestReply dataUsingEncoding:NSUTF8StringEncoding];
-            NSArray *jsonArray = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&error];
+            NSDictionary *jsonArray = [NSJSONSerialization JSONObjectWithData:responseData options:kNilOptions error:&error];
             [self populateData:jsonArray];
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self.tableView reloadData];
@@ -56,15 +56,18 @@
     [downloadTask resume];
 }
 
-- (void)populateData:(NSArray *)responseObject {
+- (void)populateData:(NSDictionary *)responseObject {
     NSMutableArray *items = [NSMutableArray array];
     NSMutableArray *cellIdentifiers = [NSMutableArray array];
     
-    for (NSDictionary *joke in responseObject) {
-        NSString *jokeText = [NSString stringWithFormat:@"%@\n\n%@", joke[@"setup"], joke[@"punchline"]];
-        [items addObject:jokeText];
-        [cellIdentifiers addObject:@"LabelTableViewCell"];
-    }
+    NSString *jokeText = [NSString stringWithFormat:@"%@\n\n%@", responseObject[@"setup"], responseObject[@"delivery"]];
+    [items addObject:jokeText];
+    [cellIdentifiers addObject:@"LabelTableViewCell"];
+//    for (NSDictionary *joke in responseObject) {
+//        NSString *jokeText = [NSString stringWithFormat:@"%@\n\n%@", joke[@"setup"], joke[@"delivery"]];
+//        [items addObject:jokeText];
+//        [cellIdentifiers addObject:@"LabelTableViewCell"];
+//    }
     
     self.headers = self.shouldFetchData ? @[@"Some bad jokes"] : @[@"Some mock data"];
     self.items = @[items];
