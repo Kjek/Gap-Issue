@@ -21,6 +21,7 @@
     if (@available(iOS 15.0, *)) {
         [self.tableView setSectionHeaderTopPadding:0.0f]; // Not working
     }
+    self.tableView.tableHeaderView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 0, CGFLOAT_MIN)];  // this work!
 }
 
 - (void)viewWillAppear:(BOOL)animated {
