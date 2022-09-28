@@ -2,7 +2,7 @@
 //  TestProjectUITests.m
 //  TestProjectUITests
 //
-//  Created by Jonas Englevid on 2021-07-02.
+//  Created by Kjek on 2021-07-02.
 //
 
 #import <XCTest/XCTest.h>
